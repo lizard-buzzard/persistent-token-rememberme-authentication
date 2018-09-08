@@ -1,0 +1,14 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+    <title>Authentication Error Page</title>
+</head>
+<body>
+<div class="container">
+
+    <div class="alert alert-danger" style="text-align: center;">Sorry, you do not have permission to view this page</div>
+    Click <a th:href="@{/app/homepage/adminconsole}">here</a> to go back to the Admin Console Page
+</div>
+</body>
+</html>
