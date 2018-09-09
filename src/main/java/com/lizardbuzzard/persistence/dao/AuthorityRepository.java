@@ -13,5 +13,4 @@ public interface AuthorityRepository extends JpaRepository<AuthorityEntity, Auth
     List<AuthorityEntity> findByUsername(String username);
 
     List<AuthorityEntity> findByUser(UserEntity user);
-
 }

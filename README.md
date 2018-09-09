@@ -4,7 +4,7 @@ The purpose of this work was to understand '__remember me__' HttpSecurity config
 #### A List of References ####
 There are a lot of articles and code examples in the Internet which didn't give me enough clear understanding. 
 
-Here is a list of references that it's worth to look through before:
+Here is a list of references that it's worth to look through:
 * [Spring Security Reference. 18.3 Persistent Token Approach](https://docs.spring.io/spring-security/site/docs/5.0.0.BUILD-SNAPSHOT/reference/htmlsingle/#remember-me-persistent-token)
 * [Spring Security Remember Me](https://www.baeldung.com/spring-security-remember-me)
 * [Lesson 3: Remember Me with Persistence](https://courses.baeldung.com/courses/learn-spring-security-the-starter-class/lectures/924437)
@@ -27,31 +27,218 @@ The goals of the work were:
 * to use __Tomcat as Embedded Web Server__ feature provided by Spring Boot using Maven;
 * to reach a transparency of '__remember me__' HttpSecurity configuration for __Persistent Token Approach__.
 
-An example, described in the article ["Remember Me" in Spring Security Example](https://www.concretepage.com/spring/spring-security/remember-me-in-spring-security-example#database) (and the code attached to this article), was taken as a starting point of the development.
+The article ["Remember Me" in Spring Security Example](https://www.concretepage.com/spring/spring-security/remember-me-in-spring-security-example#database) inspired me, and its use-case and a database structure were taken as a starting point of the development.
 
-#### Development ####
+#### Environement ####
+An environment, used for the development, includes:
+* Ubuntu 18.04.1 LTS
+* java version "1.8.0_181"
+* Apache Maven 3.5.2
+* mysql  Ver 14.14 Distrib 5.7.23, for Linux (x86_64)
 
-##### 'Mavenizing' of the project #####
-
-In order to 'mavenize' the project, a __pom.xml__ file with Spring Boot dependencies was created. For detailed list of dependencies used please refer to the __pom.xml__ file.
-Make sure to include in the dependency list dependencies which prevent the [JSP file not rendering in Spring Boot web application](https://stackoverflow.com/questions/20602010/jsp-file-not-rendering-in-spring-boot-web-application) issue (for me __scope provided__ commented works):
-```xml
-<dependency>
-    <groupId>org.apache.tomcat.embed</groupId>
-    <artifactId>tomcat-embed-jasper</artifactId>
-    <!--<scope>provided</scope>-->
-</dependency>
-<dependency>
-    <groupId>javax.servlet</groupId>
-    <artifactId>jstl</artifactId>
-    <!--<scope>provided</scope>-->
-</dependency>
-
+#### Application's landscape ####
+The application is developed on __Java__, it's web pages are developed on __HTML__ with tiny inclusions of __CSS__ and __Javascript__ fragments. 
+On the HTML pages CDN __Bootstrap__ v.4.1.3 stylesheets and __Thymeleaf-4__ templates are used. 
+##### Application's high-level structure #####
+A structure of the application's project is as on a picture below:
+```text
+.
+├── pom.xml
+├── README.md
+└── src
+    └── main
+        ├── java
+        │   └── com
+        │       └── lizardbuzzard
+        │           ├── Apps.java
+        │           ├── controller
+        │           │   └── RequestController.java
+        │           ├── persistence
+        │           │   ├── CustomMySQLDialect.java
+        │           │   ├── dao
+        │           │   │   ├── AuthorityRepository.java
+        │           │   │   └── UserRepository.java
+        │           │   └── model
+        │           │       ├── AuthorityEntity.java
+        │           │       ├── AuthorityId.java
+        │           │       └── UserEntity.java
+        │           ├── security
+        │           │   ├── config
+        │           │   │   ├── MyCustomAuthenticationSuccessHandler.java
+        │           │   │   ├── MyJdbcTokenRepositoryImpl.java
+        │           │   │   ├── SecurityConfig.java
+        │           │   │   └── SecurityWebApplicationInitializer.java
+        │           │   └── service
+        │           │       ├── UserDetailsServiceImpl.java
+        │           │       ├── UserDTO.java
+        │           │       └── UserProcessingService.java
+        │           └── spring
+        │               ├── config
+        │               │   ├── DataSourceConfig.java
+        │               │   └── MvcConfig.java
+        │               └── PopulateDatabaseOnContextRefreshedEventListener.java
+        ├── resources
+        │   ├── jdbc.properties
+        │   ├── static
+        │   │   └── images
+        │   │       └── funnycat.png
+        │   └── templates
+        │       ├── adminConsolePage.html
+        │       ├── authenticationError.html
+        │       ├── customLogin.html
+        │       └── userPage.html
+        └── webapp
 ```
-##### Spring MVC Annotation based configuration #####
-1. Create a package structure starting from com.lizardbuzzard
 
-2. Create a class which starts the application to run:
+##### Spring Boot maven project ##### 
+Maven pom.xml refers to Spring Boot parent project version 2.0.4.RELEAS:
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.0.4.RELEASE</version>
+    <relativePath/> <!-- lookup parent from repository -->
+</parent>
+```
+And then it uses following org.springframework.boot dependencies: __spring-boot-starter-web__, __spring-boot-starter-data-jpa__, __spring-boot-starter-security__. 
+
+In place of JSTL this project uses [Thymeleaf](https://www.thymeleaf.org/) as a HTML pages template engine and includes __spring-boot-starter-thymeleaf__ in the dependencies.
+
+Also the project dependencies include mysql:mysql-connector-java:5.1.46 dependency.
+
+#### Database configuration and creation ####
+To run the code you should have MySQL server installed. In order to install it please refer, for example, to [How To Install MySQL on Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-14-04) and [B.5.3.2 How to Reset the Root Password](https://dev.mysql.com/doc/refman/5.7/en/resetting-permissions.html). After the server is installed you need to create a user to connect to the database:
+```sql
+mysql -u root -p 
+> CREATE USER 'remembermeuser'@'localhost' IDENTIFIED BY 'remembermepwd';
+> GRANT ALL PRIVILEGES ON *.* TO 'remembermeuser'@'localhost';
+> FLUSH PRIVILEGES;
+``` 
+/resources/jdbc.properties file contains properties which allow to create and to connect to the database with name of 'rememberMeDb': 
+```
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/rememberMeDb?createDatabaseIfNotExist=true
+jdbc.username=remembermeuser
+jdbc.password=remembermepwd
+
+spring.jpa.database=mysql
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=com.lizardbuzzard.persistence.CustomMySQLDialect
+hibernate.show_sql=false
+```
+The database 'rememberMeDb' created (spring.jpa.hibernate.ddl-auto=update property) if it not yet exists and 'remembermeuser' has access to the database (see [81. Database Initialization](https://docs.spring.io/spring-boot/docs/current/reference/html/howto-database-initialization.html) and [Spring boot ddl auto generator](https://stackoverflow.com/questions/21113154/spring-boot-ddl-auto-generator)). 
+The property spring.jpa.properties.hibernate.dialect refers to CustomMySQLDialect class.
+```java
+/**
+ * works in conjunction with spring.jpa.properties.hibernate.dialect=com.lizardbuzzard.persistence.CustomMySQLDialect
+ * should be tuned for correct working with MySql version currently installed. Otherwise gives an error
+ */
+public class CustomMySQLDialect extends MySQL57Dialect {
+    @Override
+    public boolean dropConstraints() {
+        return false;
+    }
+}
+``` 
+It's important to have this class corresponds to the dialect of the database you work with (see [SQL Dialects in Hibernate](https://www.javatpoint.com/dialects-in-hibernate)). As on the computer where the development was done 
+```html
+$ mysql -V
+mysql  Ver 14.14 Distrib 5.7.23, for Linux (x86_64) using  EditLine wrapper
+```
+I decided to use MySQL57Dialect from a list of dialects accessible for org.hibernate.dialect.MySQLDialect
+```html
+Dialect (org.hibernate.dialect)
+    MySQLDialect (org.hibernate.dialect)
+        MySQL5Dialect (org.hibernate.dialect)
+            MySQL55Dialect (org.hibernate.dialect)
+                MySQL57Dialect (org.hibernate.dialect)
+```
+#### Database structure ####
+Database schema contains two tables, __users__ and __authorities__:
+```mysql-sql
+CREATE TABLE `users` (
+  `username` varchar(50) NOT NULL,
+  `enabled` smallint(6) NOT NULL,
+  `password` varchar(64) NOT NULL,
+  PRIMARY KEY (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `authorities` (
+  `authority` varchar(50) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  PRIMARY KEY (`authority`,`username`),
+  KEY `FKhjuy9y4fd8v5m3klig05ktofg` (`username`),
+  CONSTRAINT `FKhjuy9y4fd8v5m3klig05ktofg` FOREIGN KEY (`username`) REFERENCES `users` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+```
+JPA creates these two tables, which are described in two entity classes, __UserEntity__ and __AuthorityEntity__ (annotated by @Entity):
+```java
+@Entity
+@Table(name = "users")
+public class UserEntity {...}
+
+@Entity
+@Table(name = "authorities")
+@IdClass(AuthorityId.class)
+public class AuthorityEntity {...}
+``` 
+In order to manipulate of thise entities there are two repositories, __UserRepository__ and __AuthorityRepository__ (the interfaces, annotated by @Repository):
+```java
+@Repository
+public interface UserRepository extends JpaRepository<UserEntity, String> {
+    Optional<UserEntity> findByUsername(String username);
+}
+
+@Repository
+public interface AuthorityRepository extends JpaRepository<AuthorityEntity, AuthorityId> {
+    List<AuthorityEntity> findByUsername(String username);
+    List<AuthorityEntity> findByUser(UserEntity user);
+}
+```
+Since AuthorityEntity class maintains __many-to-one__ relationship between users' authorities and users, the best way to implement composite primary key is @IdClass annotation (see [How to effectively map and use Composite Primary keys in JPA?](http://theelitegentleman.blogspot.com/2018/01/how-to-effectively-map-and-use.html)).
+This annotation has __AuthorityId.class__ as a parameter.
+
+Third table, namely __persistent_logins__, is created by __MyJdbcTokenRepositoryImpl__ class, which extends Spring's JdbcTokenRepositoryImpl:
+```mysql-sql
+CREATE TABLE `persistent_logins` (
+  `username` varchar(64) NOT NULL,
+  `series` varchar(64) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `last_used` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`series`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+```
+A role which this table plays in __remember me persistent token aproach__ scenario is described in the articles listed above.
+
+##### Inserting records into the entities' tables #####
+__PopulateDatabaseOnContextRefreshedEventListener__ class is responsible for insertion of objects in the database just after the database is created. It creates a following list of users, their roles and passwords:
+
+|User No.| 	User Name| 	Password | List of User's Roles|
+|--------|-----------|-----------|---------------------|
+|1 		 |  admin 	 | admin123  |ROLE_ADMIN           |
+|2 		 | 	joker 	 | joker123  |ROLE_ADMIN, ROLE_USER|
+|3 		 | 	user1 	 | user1123  |ROLE_USER            |
+|4 		 | 	user2 	 | user2123  |ROLE_USER            |
+|5 		 | 	user3 	 | user3123  |ROLE_USER            |
+|6 		 | 	user4 	 | user4123  |ROLE_USER            |
+|7 		 | 	user5 	 | user5123  |ROLE_USER            |
+This class implements ApplicationListener interface and the method 
+```java
+@Override
+public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {...}
+```
+executes each time when Spring context is initialised. An additional information about this is in the next sources:
+* [java listen to ContextRefreshedEvent](https://stackoverflow.com/questions/20275952/java-listen-to-contextrefreshedevent)
+* [Spring Events](https://www.baeldung.com/spring-events)
+* [Event Handling in Spring](https://www.tutorialspoint.com/spring/event_handling_in_spring.htm)
+* [Better application events in Spring Framework 4.2](https://spring.io/blog/2015/02/11/better-application-events-in-spring-framework-4-2)
+* [How to add a hook to the application context initialization event?](https://stackoverflow.com/questions/8686507/how-to-add-a-hook-to-the-application-context-initialization-event)
+
+
+#### Spring Security Configuration ####
+
+##### Spring MVC Annotation based configuration #####
+1. A class which makes the application to run:
     ```java
     @SpringBootApplication
     public class Apps {
@@ -60,15 +247,11 @@ Make sure to include in the dependency list dependencies which prevent the [JSP 
         }
     }
     ```
-2. 
-
-
-as we use Spring Boot we can avoid of using of SecurityWebApplicationInitializer
+2. As soon as we use Spring Boot we can avoid of using of SecurityWebApplicationInitializer
 
 
 
 
-##### DataBase configuration #####
 
 
 
@@ -90,7 +273,6 @@ correlates with customLogin.html form's action attribute
 
 
 
-spring.jpa.hibernate.ddl-auto=update
 
 #### ExpressionUrlAuthorizationConfigurer.AuthorizedUrl configuration ####
 Code fragment below shows two variants of AuthorizedUrl configuration
@@ -121,6 +303,7 @@ Html page
     </div>
 </div>
 ```
+
 In order to get static resource (image) on html page
 ```
 @Override
@@ -129,7 +312,8 @@ public void addResourceHandlers(ResourceHandlerRegistry registry) {
             .addResourceLocations("/", "/resources/", "classpath:/static/images/");
 }
 ```
-Controller's method servs redirect to external site URL
+
+Controller's method which process a redirect to external site URL
 ```html
 @RequestMapping("/redirect")
 public String redirectPage() {
