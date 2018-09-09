@@ -141,11 +141,8 @@ public class CustomMySQLDialect extends MySQL57Dialect {
 }
 ``` 
 It's important to have this class corresponds to the dialect of the database you work with (see [SQL Dialects in Hibernate](https://www.javatpoint.com/dialects-in-hibernate)). As on the computer where the development was done 
-```html
-$ mysql -V
-mysql  Ver 14.14 Distrib 5.7.23, for Linux (x86_64) using  EditLine wrapper
-```
-I decided to use MySQL57Dialect from a list of dialects accessible for org.hibernate.dialect.MySQLDialect
+
+I decided to use __MySQL57Dialect__ from a list of dialects accessible for org.hibernate.dialect.MySQLDialect
 ```html
 Dialect (org.hibernate.dialect)
     MySQLDialect (org.hibernate.dialect)
@@ -153,6 +150,12 @@ Dialect (org.hibernate.dialect)
             MySQL55Dialect (org.hibernate.dialect)
                 MySQL57Dialect (org.hibernate.dialect)
 ```
+because I have mysql version on my computer installed 
+```html
+$ mysql -V
+mysql  Ver 14.14 Distrib 5.7.23, for Linux (x86_64) using  EditLine wrapper
+```
+
 #### Database structure ####
 Database schema contains two tables, __users__ and __authorities__:
 ```mysql-sql
@@ -171,7 +174,7 @@ CREATE TABLE `authorities` (
   CONSTRAINT `FKhjuy9y4fd8v5m3klig05ktofg` FOREIGN KEY (`username`) REFERENCES `users` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
-JPA creates these two tables, which are described in two entity classes, __UserEntity__ and __AuthorityEntity__ (annotated by @Entity):
+JPA creates these two tables, which are described by two entity classes, __UserEntity__ and __AuthorityEntity__ (annotated by @Entity):
 ```java
 @Entity
 @Table(name = "users")
@@ -182,7 +185,7 @@ public class UserEntity {...}
 @IdClass(AuthorityId.class)
 public class AuthorityEntity {...}
 ``` 
-In order to manipulate of thise entities there are two repositories, __UserRepository__ and __AuthorityRepository__ (the interfaces, annotated by @Repository):
+In order to manipulate of thise entities there are two JPA repositories, __UserRepository__ and __AuthorityRepository__ (the interfaces, annotated by @Repository):
 ```java
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, String> {
@@ -208,7 +211,7 @@ CREATE TABLE `persistent_logins` (
   PRIMARY KEY (`series`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 ```
-A role which this table plays in __remember me persistent token aproach__ scenario is described in the articles listed above.
+A role which this table plays in __remember me persistent token aproach__ scenario is described in the [articles listed above](#a-list-of-references).
 
 ##### Inserting records into the entities' tables #####
 __PopulateDatabaseOnContextRefreshedEventListener__ class is responsible for insertion of objects in the database just after the database is created. It creates a following list of users, their roles and passwords:
