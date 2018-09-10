@@ -278,21 +278,54 @@ Then you can enter users and their passwords from the [table above](#users-and-r
 ##### Correct credentials scenario #####
 
 You should fill in both the fields on the login form. In case if you leave one of the fields empty, the application shows an error message:
+
 ![empty login fields error](readmeimages/empty-login-fields-error.png?raw=true)
+
 This check is done by Javascript __validateFormFields()__ function on the customLogin.html page.
 
-In case when you filled in both the fields but entered bad credentials, you will be informed by Spring's login form check:
+In case when you filled in both of the fields but entered bad credentials, you will be informed by Spring's login form check:
+
 ![bad credentials](readmeimages/bad-credentials.png?raw=true)
 
 The correct credentials (username/password) are listed in [this table](#users-and-roles).
 
+A subject of the investigation is to ensure that 
+* first, how works the grants on different addresses depending on the roles of the user entered
+* second, how works remember me set-up
 
-##### ROLE_ADMIN scenario #####
+##### Enter users with different roles scenario #####
+In order to investigate the first point, we will enter with different users with different roles. Consider the following snippet from __configure(HttpSecurity http)__ method of __SecurityConfig__ class:
+```java
+http.authorizeRequests()
+        .antMatchers("/app", "/app/accessDenied").permitAll()
+        .and().exceptionHandling().accessDeniedPage("/app/accessDenied")
+        .and().csrf().disable();
+
+// two variants of AuthorizedUrl configuration
+http.authorizeRequests()
+        .antMatchers("/app/homepage/adminconsole/**").access("hasRole('ROLE_ADMIN')");
+http.authorizeRequests()
+        .antMatchers("/app/homepage/user/**", "/app/redirect").hasRole("USER");  // "ROLE_" adds automatically
+```
+Here we have next access rules configuration: 
+* first, all the users with correct credentials are permitted to access "/app" and "/app/accessDenied" HTTP request paths;
+* second, users with the '__ROLE_ADMIN__' role are granted to access all of the "/app/homepage/adminconsole/**" paths;
+* third, users with the '__ROLE_USER__' role are granted to access all of the "/app/homepage/user/**" and "/app/redirect" paths;
+* fourth, in case of violation of security access rules application redirects the user to error page by "/app/accessDenied" path.
+
+###### Access Rules Testing ######
+* Enter by user with ROLE_ADMIN role
+
+    Fill in __admin/admin123__ on login form
 
 
+* Enter by user with ROLE_USER role
 
-##### ROLE_USER scenario #####
+    Fill in __user1/user1123__ on login form
 
+* Enter by user with both ROLE_ADMIN and ROLE_USER roles
+
+    Fill in __joker/joker1123__ on login form
 
 ##### ROLE_ADMIN, ROLE_USER scenario #####
 
