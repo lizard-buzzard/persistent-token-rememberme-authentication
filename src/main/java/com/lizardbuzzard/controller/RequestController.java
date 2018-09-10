@@ -49,7 +49,7 @@ public class RequestController {
     }
 
     @RequestMapping("/accessDenied")
-    public String authenticationErrorPage() {
-        return "authenticationError";
+    public String authorizationErrorPage() {
+        return "authorizationError";
     }
 }

@@ -22,12 +22,12 @@ Here is a list of references that it's worth to look through:
 ## Goals of the work ##
 The goals of the work were:
 * to have a code of the example based on __Spring Boot__ rapid application development platform;
-* to use a pure Spring __Annotation-based__ configuration for this task;
+* to use a pure Spring __Annotation-based__ configuration;
 * to use __Apache Maven__ as a project build automation tool;
 * to use __Tomcat as Embedded Web Server__ feature provided by Spring Boot using Maven;
 * to reach a transparency of '__remember me__' HttpSecurity configuration for __Persistent Token Approach__.
 
-The article ["Remember Me" in Spring Security Example](https://www.concretepage.com/spring/spring-security/remember-me-in-spring-security-example#database) inspired me, and its use-case and a database structure were taken as a starting point of the development.
+The article ["Remember Me" in Spring Security Example](https://www.concretepage.com/spring/spring-security/remember-me-in-spring-security-example#database) inspired me, and its use-case and a database structure were taken as a starting points of the development.
 
 ## Environement ##
 An environment, used for the development, includes:
@@ -104,7 +104,7 @@ Maven pom.xml refers to Spring Boot parent project version 2.0.4.RELEAS:
 ```
 And then it uses following org.springframework.boot dependencies: __spring-boot-starter-web__, __spring-boot-starter-data-jpa__, __spring-boot-starter-security__. 
 
-In place of JSTL this project uses [Thymeleaf](https://www.thymeleaf.org/) as a HTML pages template engine and includes __spring-boot-starter-thymeleaf__ in the dependencies.
+This project uses [Thymeleaf](https://www.thymeleaf.org/) as a HTML pages template engine and includes __spring-boot-starter-thymeleaf__ in the dependencies.
 
 Also the project dependencies include mysql:mysql-connector-java:5.1.46 dependency.
 
@@ -346,7 +346,7 @@ redirectStrategy.sendRedirect(request, response, targetUrl);
 ```
 This code redirects to "/app/homepage/adminconsole" URL in case if the user has "ROLE_ADMIN" role and to "/app/homepage/user" URL in case of "ROLE_USER" role.
 
-#### Authorize Requests Testing ####
+#### Authorize Request Tests ####
 
 * Enter as the user with __ROLE_USER__ role
 
@@ -358,10 +358,9 @@ This code redirects to "/app/homepage/adminconsole" URL in case if the user has 
         return "userPage";
     }
     ```    
-    the user gets the __userPage.html__ page:
+    the user goes to the __userPage.html__ page:
     
     ![user work area page](readmeimages/user-work-area-page.png?raw=true)
-
 
 * Enter as the user with __ROLE_ADMIN__ role
 
@@ -373,19 +372,70 @@ This code redirects to "/app/homepage/adminconsole" URL in case if the user has 
         return "adminConsolePage";
     }
     ``` 
-    the user gets the __adminConsolePage.html__ page:
+    the user goes to the __adminConsolePage.html__ page:
     
     ![admin console page](readmeimages/admin-console-page.png?raw=true)
 
+    On the __adminConsolePage.html__ page there is the \<a> tag href attribute in which goes to the __userPage.html__ page:
+    ```html
+     <a th:href="@{/app/homepage/user/}">User Work Area Page</a>
+    ```
+    But if the user __admin/admin123__ tries to chick on this link, he will be redirected on "/app/accessDenied" URL 
+    ```java
+    @RequestMapping("/accessDenied")
+    public String authorizationErrorPage() {
+        return "authorizationError";
+    }
+    ```
+    and will go to __authorizationError.html__ page:
+    
+    ![authorization error page](readmeimages/authorization-error.png?raw=true)
+
+* Enter as the user with both __ROLE_ADMIN__ and __ROLE_USER__ roles.
+
+    Fill in __joker/joker1123__ on login form. The application redirects the user to "/app/homepage/adminconsole" URL and then to the user goes to the __adminConsolePage.html__ page:
+    
+    ![admin console joker page.png](readmeimages/admin-console-joker-page.png?raw=true)
+
+    Since this user has __ROLE_USER__ role, after he clicks on \<a th:href="@{/app/homepage/user/}"> link, he goes to the __userPage.html__ page:
+    
+    ![user page joker.png](readmeimages/user-page-joker.png?raw=true)
+
+### Remember Me Persistent ###
+Setting of the "Remember Me" configuration is done in the following code snippet:
+```java
+http.rememberMe()
+        .tokenRepository(persistentTokenRepository())
+        .rememberMeParameter("myRememberMeParameterName")
+        .rememberMeCookieName("my-remember-me")
+        .tokenValiditySeconds(86400);
+```
+Here "myRememberMeParameterName" is the HTTP parameter used to indicate to remember the user. It is equal to the 'name' attribute of the checkbox of the \<input> tag on the __customLogin.html__ page:
+```html
+<label>
+    <input class="checkbox" type="checkbox" name="myRememberMeParameterName">
+    <span class="checkbox-custom"></span>
+    <span class="label">Remember Me</span>
+</label>
+```
+And "my-remember-me" is the name of cookie which store the token for remember me authentication.
+__PersistentTokenRepository__ bean is configured as following:
+
+```java
+@Bean
+public PersistentTokenRepository persistentTokenRepository() {
+    MyJdbcTokenRepositoryImpl tokenRepository = new MyJdbcTokenRepositoryImpl();
+    tokenRepository.setDataSource(dataSource);
+    return tokenRepository;
+}
+```
+MyJdbcTokenRepositoryImpl class extends JdbcTokenRepositoryImpl with purpose to override __initDao()__ method. Persistent Token Repository manipulates data in the __persistent_logins__ table.
+
+#### Remember Me Persistent Test ####
+In this test we will check how 'Remember Me Persistent' acts in case of two users entered the application in two different browsers. 
 
 
-* Enter as the user with both __ROLE_ADMIN__ and __ROLE_USER__ roles
 
-    Fill in __joker/joker1123__ on login form
-
-
-
-### 'my-remember-me' cookie ###
 
 
 ## Spring Security Configuration ##
