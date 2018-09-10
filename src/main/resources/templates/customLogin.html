@@ -106,14 +106,14 @@
         /*<![CDATA[*/
         function validateFormFields() {
             if(document.myform.myLoginPageUsernameParameterName.value == "") {
-                $("#usernameError").show().html("Enter User Name");
+                $("#usernameError").show().html("you must enter a username");
                 return false;
             } else {
                 $("#usernameError").hide();
             }
 
             if(document.myform.myLoginPagePasswordParameterName.value == "") {
-                $("#passwordError").show().html("Enter Password");
+                $("#passwordError").show().html("you must enter a password");
                 return false;
             } else {
                 $("#passwordError").hide();

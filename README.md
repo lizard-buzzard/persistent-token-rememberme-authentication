@@ -268,13 +268,25 @@ Both the ways make Spring to start and to run the application:
  :: Spring Boot ::        (v2.0.4.RELEASE)
 
 ```
-After the server starts, you can enter in the browser's address bar __http://localhost:8080/app__ and the application should show its login page:
+After the server starts, you can enter in the browser's address bar __http://localhost:8080/app__ and the applicaion should show its __login page__:
 
 ![login page](readmeimages/login-page.png?raw=true)
 
 Then you can enter users and their passwords from the [table above](#users-and-roles).
 
 #### Scenarios to explore ####
+##### Correct credentials scenario #####
+
+You should fill in both the fields on the login form. In case if you leave one of the fields empty, the application shows an error message:
+![empty login fields error](readmeimages/empty-login-fields-error.png?raw=true)
+This check is done by Javascript __validateFormFields()__ function on the customLogin.html page.
+
+In case when you filled in both the fields but entered bad credentials, you will be informed by Spring's login form check:
+![bad credentials](readmeimages/bad-credentials.png?raw=true)
+
+The correct credentials (username/password) are listed in [this table](#users-and-roles).
+
+
 ##### ROLE_ADMIN scenario #####
 
 
