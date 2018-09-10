@@ -2,7 +2,7 @@
 The purpose of this work was to understand '__remember me__' HttpSecurity configuration of WebSecurityConfigurerAdapter which is based on __Persistent Token Approach__.
 
 #### A List of References ####
-There are a lot of articles and code examples in the Internet which didn't give me enough clear understanding. 
+There are a lot of articles and code examples in the Internet which haven't given me enough clear understanding so I decided to develop such a code example by myself.
 
 Here is a list of references that it's worth to look through:
 * [Spring Security Reference. 18.3 Persistent Token Approach](https://docs.spring.io/spring-security/site/docs/5.0.0.BUILD-SNAPSHOT/reference/htmlsingle/#remember-me-persistent-token)
@@ -35,6 +35,8 @@ An environment, used for the development, includes:
 * java version "1.8.0_181"
 * Apache Maven 3.5.2
 * mysql  Ver 14.14 Distrib 5.7.23, for Linux (x86_64)
+* Google Chrome Version 68.0.3440.106 (Official Build) (64-bit)
+* FireFox Quantrum 62.0 (64-bit)
 
 #### Application's landscape ####
 The application is developed on __Java__, it's web pages are developed on __HTML__ with tiny inclusions of __CSS__ and __Javascript__ fragments. 
@@ -213,18 +215,9 @@ CREATE TABLE `persistent_logins` (
 ```
 A role which this table plays in __remember me persistent token aproach__ scenario is described in the [articles listed above](#a-list-of-references).
 
-##### Inserting records into the entities' tables #####
+##### Inserting records into the entities tables #####
 __PopulateDatabaseOnContextRefreshedEventListener__ class is responsible for insertion of objects in the database just after the database is created. It creates a following list of users, their roles and passwords:
 
-|User No.| 	User Name| 	Password | List of User's Roles|
-|--------|-----------|-----------|---------------------|
-|1 		 |  admin 	 | admin123  |ROLE_ADMIN           |
-|2 		 | 	joker 	 | joker123  |ROLE_ADMIN, ROLE_USER|
-|3 		 | 	user1 	 | user1123  |ROLE_USER            |
-|4 		 | 	user2 	 | user2123  |ROLE_USER            |
-|5 		 | 	user3 	 | user3123  |ROLE_USER            |
-|6 		 | 	user4 	 | user4123  |ROLE_USER            |
-|7 		 | 	user5 	 | user5123  |ROLE_USER            |
 This class implements ApplicationListener interface and the method 
 ```java
 @Override
@@ -236,6 +229,63 @@ executes each time when Spring context is initialised. An additional information
 * [Event Handling in Spring](https://www.tutorialspoint.com/spring/event_handling_in_spring.htm)
 * [Better application events in Spring Framework 4.2](https://spring.io/blog/2015/02/11/better-application-events-in-spring-framework-4-2)
 * [How to add a hook to the application context initialization event?](https://stackoverflow.com/questions/8686507/how-to-add-a-hook-to-the-application-context-initialization-event)
+
+###### Users and Roles ######
+A logical representation of the data inserted by __PopulateDatabaseOnContextRefreshedEventListener__ is shown in the table below:
+
+|User No.| 	User Name| 	Password | List of User's Roles|
+|--------|-----------|-----------|---------------------|
+|1 		 |  admin 	 | admin123  |ROLE_ADMIN           |
+|2 		 | 	joker 	 | joker123  |ROLE_ADMIN, ROLE_USER|
+|3 		 | 	user1 	 | user1123  |ROLE_USER            |
+|4 		 | 	user2 	 | user2123  |ROLE_USER            |
+|5 		 | 	user3 	 | user3123  |ROLE_USER            |
+|6 		 | 	user4 	 | user4123  |ROLE_USER            |
+|7 		 | 	user5 	 | user5123  |ROLE_USER            |
+
+#### How to run the application ####
+The simplest way is to run the command in the project's home:
+```text
+$ mvn spring-boot:run
+```
+Otherwise, you can first buind a __jar__ file by
+```text
+$ mvn clean package
+```
+command, which builds target/persistent-token-rememberme-authentication-1.0-SNAPSHOT.jar, and then you can run this jar:
+```text
+java -jar target/persistent-token-rememberme-authentication-1.0-SNAPSHOT.jar
+
+```
+Both the ways make Spring to start and to run the application:
+```text
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v2.0.4.RELEASE)
+
+```
+After the server starts, you can enter in the browser's address bar __http://localhost:8080/app__ and the application should show its login page:
+
+![login page](readmeimages/login-page.png?raw=true)
+
+Then you can enter users and their passwords from the [table above](#users-and-roles).
+
+#### Scenarios to explore ####
+##### ROLE_ADMIN scenario #####
+
+
+
+##### ROLE_USER scenario #####
+
+
+##### ROLE_ADMIN, ROLE_USER scenario #####
+
+
+##### 'my-remember-me' cookie #####
 
 
 #### Spring Security Configuration ####
