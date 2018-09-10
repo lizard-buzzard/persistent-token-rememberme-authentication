@@ -1,7 +1,7 @@
-### Persistent Token Approach for HttpSecurity rememberMe() Authentication ###
+# Persistent Token Approach for HttpSecurity rememberMe() Authentication #
 The purpose of this work was to understand '__remember me__' HttpSecurity configuration of WebSecurityConfigurerAdapter which is based on __Persistent Token Approach__.
 
-#### A List of References ####
+## A List of References ##
 There are a lot of articles and code examples in the Internet which haven't given me enough clear understanding so I decided to develop such a code example by myself.
 
 Here is a list of references that it's worth to look through:
@@ -19,7 +19,7 @@ Here is a list of references that it's worth to look through:
 * [Spring Boot running data.sql before creating entities in presence of schema.sql](https://github.com/spring-projects/spring-boot/issues/9048)
 * ["Remember Me" in Spring Security Example](https://www.concretepage.com/spring/spring-security/remember-me-in-spring-security-example#database)
 
-#### Goals of the work ####
+## Goals of the work ##
 The goals of the work were:
 * to have a code of the example based on __Spring Boot__ rapid application development platform;
 * to use a pure Spring __Annotation-based__ configuration for this task;
@@ -29,7 +29,7 @@ The goals of the work were:
 
 The article ["Remember Me" in Spring Security Example](https://www.concretepage.com/spring/spring-security/remember-me-in-spring-security-example#database) inspired me, and its use-case and a database structure were taken as a starting point of the development.
 
-#### Environement ####
+## Environement ##
 An environment, used for the development, includes:
 * Ubuntu 18.04.1 LTS
 * java version "1.8.0_181"
@@ -38,10 +38,10 @@ An environment, used for the development, includes:
 * Google Chrome Version 68.0.3440.106 (Official Build) (64-bit)
 * FireFox Quantrum 62.0 (64-bit)
 
-#### Application's landscape ####
+## Application's landscape ##
 The application is developed on __Java__, it's web pages are developed on __HTML__ with tiny inclusions of __CSS__ and __Javascript__ fragments. 
 On the HTML pages CDN __Bootstrap__ v.4.1.3 stylesheets and __Thymeleaf-4__ templates are used. 
-##### Application's high-level structure #####
+### Application's high-level structure ###
 A structure of the application's project is as on a picture below:
 ```text
 .
@@ -92,7 +92,7 @@ A structure of the application's project is as on a picture below:
         └── webapp
 ```
 
-##### Spring Boot maven project ##### 
+### Spring Boot Maven Project ### 
 Maven pom.xml refers to Spring Boot parent project version 2.0.4.RELEAS:
 ```xml
 <parent>
@@ -108,7 +108,7 @@ In place of JSTL this project uses [Thymeleaf](https://www.thymeleaf.org/) as a 
 
 Also the project dependencies include mysql:mysql-connector-java:5.1.46 dependency.
 
-#### Database configuration and creation ####
+## Database configuration and creation ##
 To run the code you should have MySQL server installed. In order to install it please refer, for example, to [How To Install MySQL on Ubuntu 14.04](https://www.digitalocean.com/community/tutorials/how-to-install-mysql-on-ubuntu-14-04) and [B.5.3.2 How to Reset the Root Password](https://dev.mysql.com/doc/refman/5.7/en/resetting-permissions.html). After the server is installed you need to create a user to connect to the database:
 ```sql
 mysql -u root -p 
@@ -158,7 +158,7 @@ $ mysql -V
 mysql  Ver 14.14 Distrib 5.7.23, for Linux (x86_64) using  EditLine wrapper
 ```
 
-#### Database structure ####
+## Database Structure ##
 Database schema contains two tables, __users__ and __authorities__:
 ```mysql-sql
 CREATE TABLE `users` (
@@ -215,7 +215,7 @@ CREATE TABLE `persistent_logins` (
 ```
 A role which this table plays in __remember me persistent token aproach__ scenario is described in the [articles listed above](#a-list-of-references).
 
-##### Inserting records into the entities tables #####
+### Inserting Records into the Entities Tables ###
 __PopulateDatabaseOnContextRefreshedEventListener__ class is responsible for insertion of objects in the database just after the database is created. It creates a following list of users, their roles and passwords:
 
 This class implements ApplicationListener interface and the method 
@@ -230,7 +230,7 @@ executes each time when Spring context is initialised. An additional information
 * [Better application events in Spring Framework 4.2](https://spring.io/blog/2015/02/11/better-application-events-in-spring-framework-4-2)
 * [How to add a hook to the application context initialization event?](https://stackoverflow.com/questions/8686507/how-to-add-a-hook-to-the-application-context-initialization-event)
 
-###### Users and Roles ######
+#### Users and Roles ####
 A logical representation of the data inserted by __PopulateDatabaseOnContextRefreshedEventListener__ is shown in the table below:
 
 |User No.| 	User Name| 	Password | List of User's Roles|
@@ -243,7 +243,7 @@ A logical representation of the data inserted by __PopulateDatabaseOnContextRefr
 |6 		 | 	user4 	 | user4123  |ROLE_USER            |
 |7 		 | 	user5 	 | user5123  |ROLE_USER            |
 
-#### How to run the application ####
+## How to run the Application ##
 The simplest way is to run the command in the project's home:
 ```text
 $ mvn spring-boot:run
@@ -274,8 +274,8 @@ After the server starts, you can enter in the browser's address bar __http://loc
 
 Then you can enter users and their passwords from the [table above](#users-and-roles).
 
-#### Scenarios to explore ####
-##### Correct credentials scenario #####
+## Scenarios to explore ##
+### Correct credentials scenario ###
 
 You should fill in both the fields on the login form. In case if you leave one of the fields empty, the application shows an error message:
 
@@ -290,10 +290,10 @@ In case when you filled in both of the fields but entered bad credentials, you w
 The correct credentials (username/password) are listed in [this table](#users-and-roles).
 
 A subject of the investigation is to ensure that 
-* first, how works the grants on different addresses depending on the roles of the user entered
+* first, how works the grants on different URL depending on the roles of the user entered
 * second, how works remember me set-up
 
-##### Enter users with different roles scenario #####
+### Authorize Requests Rules ###
 In order to investigate the first point, we will enter with different users with different roles. Consider the following snippet from __configure(HttpSecurity http)__ method of __SecurityConfig__ class:
 ```java
 http.authorizeRequests()
@@ -308,34 +308,89 @@ http.authorizeRequests()
         .antMatchers("/app/homepage/user/**", "/app/redirect").hasRole("USER");  // "ROLE_" adds automatically
 ```
 Here we have next access rules configuration: 
-* first, all the users with correct credentials are permitted to access "/app" and "/app/accessDenied" HTTP request paths;
-* second, users with the '__ROLE_ADMIN__' role are granted to access all of the "/app/homepage/adminconsole/**" paths;
-* third, users with the '__ROLE_USER__' role are granted to access all of the "/app/homepage/user/**" and "/app/redirect" paths;
+* first, all the users with correct credentials are permitted to access "/app" and "/app/accessDenied" URL patterns;
+* second, users with the '__ROLE_ADMIN__' role are granted to access all of the "/app/homepage/adminconsole/**" URL patterns;
+* third, users with the '__ROLE_USER__' role are granted to access all of the "/app/homepage/user/**" and "/app/redirect" URL patterns;
 * fourth, in case of violation of security access rules application redirects the user to error page by "/app/accessDenied" path.
 
-###### Access Rules Testing ######
-* Enter by user with ROLE_ADMIN role
+The following snippets of code demonstrates a configuration done for login page.  
+```java
+http.formLogin()
+        .loginPage("/app")
+        .loginProcessingUrl("/loginFormPostTo")
+        .usernameParameter("myLoginPageUsernameParameterName")
+        .passwordParameter("myLoginPagePasswordParameterName")
+        .successHandler(authenticationSuccessHandler);
+```
+It's quite transparent except, may be, of __authenticationSuccessHandler__ parameter of __successHandler()__ method of AbstractAuthenticationFilterConfigurer class.
+__authenticationSuccessHandler__ is an object of a class which implements AuthenticationSuccessHandler interface:
+```java
+@Autowired
+@Qualifier("authenticationSuccessHandler")
+private AuthenticationSuccessHandler authenticationSuccessHandler;
+``` 
+AuthenticationSuccessHandler is implemented by __MyCustomAuthenticationSuccessHandler__ class, the main purpose of which is to define a redirection page depending on a role of the user:
+```java
+String targetUrl = null;
+Supplier<Stream<? extends GrantedAuthority>> sup = () -> auth.getAuthorities().stream();
 
-    Fill in __admin/admin123__ on login form
+if(sup.get().anyMatch(a->(((GrantedAuthority) a).getAuthority().equals("ROLE_ADMIN")))) {
+    targetUrl = "/app/homepage/adminconsole";
+} else if(sup.get().anyMatch(a->(((GrantedAuthority) a).getAuthority().equals("ROLE_USER")))) {
+    targetUrl = "/app/homepage/user";
+} else {
+    targetUrl = "/app";
+}
+
+redirectStrategy.sendRedirect(request, response, targetUrl);
+```
+This code redirects to "/app/homepage/adminconsole" URL in case if the user has "ROLE_ADMIN" role and to "/app/homepage/user" URL in case of "ROLE_USER" role.
+
+#### Authorize Requests Testing ####
+
+* Enter as the user with __ROLE_USER__ role
+
+    Fill in __user1/user1123__ on login form. As expected the application redirects the user to "/app/homepage/user" and then via __userHomePage()__ method of __RequestController__ class
+    ```java
+    @RequestMapping("/homepage/user")
+    public String userHomePage(Model model) {
+        ...
+        return "userPage";
+    }
+    ```    
+    the user gets the __userPage.html__ page:
+    
+    ![user work area page](readmeimages/user-work-area-page.png?raw=true)
 
 
-* Enter by user with ROLE_USER role
+* Enter as the user with __ROLE_ADMIN__ role
 
-    Fill in __user1/user1123__ on login form
+    Fill in __admin/admin123__ on login form. As expected the application redirects the user to "/app/homepage/adminconsole" and then via __adminHomePage()__ method of __RequestController__ class
+    ```java
+    @RequestMapping("/homepage/adminconsole")
+    public String adminHomePage(Model model) {
+        ...
+        return "adminConsolePage";
+    }
+    ``` 
+    the user gets the __adminConsolePage.html__ page:
+    
+    ![admin console page](readmeimages/admin-console-page.png?raw=true)
 
-* Enter by user with both ROLE_ADMIN and ROLE_USER roles
+
+
+* Enter as the user with both __ROLE_ADMIN__ and __ROLE_USER__ roles
 
     Fill in __joker/joker1123__ on login form
 
-##### ROLE_ADMIN, ROLE_USER scenario #####
 
 
-##### 'my-remember-me' cookie #####
+### 'my-remember-me' cookie ###
 
 
-#### Spring Security Configuration ####
+## Spring Security Configuration ##
 
-##### Spring MVC Annotation based configuration #####
+### Spring MVC Annotation based configuration ###
 1. A class which makes the application to run:
     ```java
     @SpringBootApplication
