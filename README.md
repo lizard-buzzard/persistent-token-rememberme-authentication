@@ -380,7 +380,7 @@ This code redirects to "/app/homepage/adminconsole" URL in case if the user has 
     ```html
      <a th:href="@{/app/homepage/user/}">User Work Area Page</a>
     ```
-    But if the user __admin/admin123__ tries to chick on this link, he will be redirected on "/app/accessDenied" URL 
+    But if the user __admin/admin123__ tries to click on this link, he will be redirected on "/app/accessDenied" URL 
     ```java
     @RequestMapping("/accessDenied")
     public String authorizationErrorPage() {
