@@ -248,7 +248,7 @@ The simplest way is to run the command in the project's home:
 ```text
 $ mvn spring-boot:run
 ```
-Otherwise, you can first buind a __jar__ file by
+Otherwise, you can first build a __jar__ file by
 ```text
 $ mvn clean package
 ```
@@ -291,7 +291,7 @@ The correct credentials (username/password) are listed in [this table](#users-an
 
 A subject of the investigation is to ensure that 
 * first, how works the grants on different URL depending on the roles of the user entered
-* second, how works remember me set-up
+* second, how works the 'remember me' set-up
 
 ### Authorize Requests Rules ###
 In order to investigate the first point, we will enter with different users with different roles. Consider the following snippet from __configure(HttpSecurity http)__ method of __SecurityConfig__ class:
@@ -432,11 +432,27 @@ public PersistentTokenRepository persistentTokenRepository() {
 MyJdbcTokenRepositoryImpl class extends JdbcTokenRepositoryImpl with purpose to override __initDao()__ method. Persistent Token Repository manipulates data in the __persistent_logins__ table.
 
 #### Remember Me Persistent Test ####
-In this test we will check how 'Remember Me Persistent' acts in case of two users entered the application in two different browsers. 
+In this test we will check how 'Remember Me Persistent' acts in case of two users entered the application in two different browsers. We launch two browsers, FireFox and Chrome, go to login page and enter __admin/admin123__ in Firefox and __user1/user1123__ in Chrome.
 
+As we see there are two cookies in each of the browsers, they are __JSESSIONID__ and __my-remember-me__: 
 
+![admin cookies](readmeimages/admin-cookies.png?raw=true)
 
+and in Chrome:
 
+![user cookies](readmeimages/user-cookies.png?raw=true)
+
+And in the __rememberMeDb__ database two records for two user's __tokens__ in the __persistent_logins__ table have been created:
+
+![persistent logins](readmeimages/persistent-logins.png?raw=true)
+ 
+We will follow to the scenario described in ["Remember Me" in Spring Security Example](), in the [Persistent Token Approach using Annotation](https://www.concretepage.com/spring/spring-security/remember-me-in-spring-security-example#persistent-token-annotation) section:
+* delete __JSESSIONID__ cookie. After deleting this cookie, session is expired;
+* stop and then restart the server again
+* then try to access the URLs __http://localhost:8080/app/homepage/adminconsole__ in __FireFox__ and __http://localhost:8080/app/homepage/user__ in __Chrome__. In each cases we enter to these pages without authentication on __login__ page.
+* then try to access the URLs __http://localhost:8080/app/homepage/adminconsole__ in __Chrome__ and __http://localhost:8080/app/homepage/user__ in __FireFox__. This time in each of the browsers we are redirected to __login__ pages.
+
+And after logout for both of the users __admin/admin123__ and __user1/user1123__ in both of the browsers, the token records in the __persistent_logins__ table will be deleted.
 
 ## Spring Security Configuration ##
 
