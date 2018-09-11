@@ -313,7 +313,7 @@ Here we have next access rules configuration:
 * third, users with the '__ROLE_USER__' role are granted to access all of the "/app/homepage/user/**" and "/app/redirect" URL patterns;
 * fourth, in case of violation of security access rules application redirects the user to error page by "/app/accessDenied" path.
 
-The following snippets of code demonstrates a configuration done for login page.  
+The following snippets of code demonstrates a configuration done for __login__ page.  
 ```java
 http.formLogin()
         .loginPage("/app")
@@ -454,9 +454,8 @@ We will follow to the scenario described in ["Remember Me" in Spring Security Ex
 
 And after logout for both of the users __admin/admin123__ and __user1/user1123__ in both of the browsers, the token records in the __persistent_logins__ table will be deleted.
 
-## Spring Security Configuration ##
+## Some additional Notes on Spring Security Configuration ##
 
-### Spring MVC Annotation based configuration ###
 1. A class which makes the application to run:
     ```java
     @SpringBootApplication
@@ -466,83 +465,53 @@ And after logout for both of the users __admin/admin123__ and __user1/user1123__
         }
     }
     ```
-2. As soon as we use Spring Boot we can avoid of using of SecurityWebApplicationInitializer
+2. As soon as we use __Spring Boot__ we can avoid of using of __SecurityWebApplicationInitializer__
 
+3. The default URL where the Spring Login will POST to trigger the authentication process is __/login__ which can be overridden via the __loginProcessingUrl()__ method (see [Spring Security Form Login](https://www.baeldung.com/spring-security-login)). This HttpSecurity configuration 
+    ```
+    loginProcessingUrl("/loginFormPostTo").
+    
+    ```
+    corresponds to __customLogin.html__ form's action attribute 
+    ```html
+    <form name="myform" th:action="@{/loginFormPostTo}" method="POST" onsubmit="return validateFormFields();">
 
+    ```
+4. __ExpressionUrlAuthorizationConfigurer.AuthorizedUrl__ configuration.
+    Code fragment below shows two variants of AuthorizedUrl configuration
+    "When creating our users ... , we do not specify “ROLE_” as we would with the XML configuration. Since this convention is so common, the “roles” method automatically adds “ROLE_” for you. If you did not want “ROLE_” added you could use the authorities method instead."([Spring Security Java Config Preview: Web Security](https://spring.io/blog/2013/07/03/spring-security-java-config-preview-web-security/)).
+    
+    "So hasAuthority(‘ROLE_ADMIN’) is similar to hasRole(‘ADMIN’) because the ‘ROLE_‘ prefix gets added automatically."
+    But the good thing about using authorities is that we don’t have to use the ROLE_ prefix at all.([Intro to Spring Security Expressions](https://www.baeldung.com/spring-security-expressions))
 
-
-
-
-
-
-
-
- 
-[Spring Security Form Login](https://www.baeldung.com/spring-security-login)
-The default URL where the Spring Login will POST to trigger the authentication process is /login which can be overridden via the loginProcessingUrl method. This HttpSecurity configuration 
-```
-loginProcessingUrl("/loginFormPostTo").
-
-```
-correlates with customLogin.html form's action attribute 
-```html
-<form name="myform" th:action="@{/loginFormPostTo}" method="POST" onsubmit="return validateFormFields();">
-
-```
-
-
-
-
-#### ExpressionUrlAuthorizationConfigurer.AuthorizedUrl configuration ####
-Code fragment below shows two variants of AuthorizedUrl configuration
-```
-http.authorizeRequests()
-        .antMatchers("/app/homepage/adminconsole/**").access("hasRole('ROLE_ADMIN')");
-http.authorizeRequests()
-        .antMatchers("/app/homepage/user/**", "/app/redirect").hasRole("USER");  // "ROLE_" adds automatically
-```
-[Spring Security Java Config Preview: Web Security](https://spring.io/blog/2013/07/03/spring-security-java-config-preview-web-security/):
-"When creating our users ... , we do not specify “ROLE_” as we would with the XML configuration. Since this convention is so common, the “roles” method automatically adds “ROLE_” for you. If you did not want “ROLE_” added you could use the authorities method instead."
-[Intro to Spring Security Expressions](https://www.baeldung.com/spring-security-expressions):
-"So hasAuthority(‘ROLE_ADMIN’) is similar to hasRole(‘ADMIN’) because the ‘ROLE_‘ prefix gets added automatically."
-But the good thing about using authorities is that we don’t have to use the ROLE_ prefix at all.
-
-#### User Page ####
-[Adding Static Resources (css, JavaScript, Images) to Thymeleaf](https://memorynotfound.com/adding-static-resources-css-javascript-images-thymeleaf/)
-
-Html page
-```html
-<div class="row" >
-    <div class="col-sm-3">
-        <!--<img th:src="@{/images/funnycat.png}" >-->
-        <img src="/images/funnycat.png" >
+5. How to use __static resources__ on HTML Page. [Adding Static Resources (css, JavaScript, Images) to Thymeleaf](https://memorynotfound.com/adding-static-resources-css-javascript-images-thymeleaf/)
+    ```html
+    <div class="row" >
+        <div class="col-sm-3">
+            <!--<img th:src="@{/images/funnycat.png}" >-->
+            <img src="/images/funnycat.png" >
+        </div>
+        <div class="col-sm-9">
+            <iframe th:src="@{/app/redirect}" style="width: 100%; height: 500px;" frameborder="no"/>
+        </div>
     </div>
-    <div class="col-sm-9">
-        <iframe th:src="@{/app/redirect}" style="width: 100%; height: 500px;" frameborder="no"/>
-    </div>
-</div>
-```
-
-In order to get static resource (image) on html page
-```
-@Override
-public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/resources/**", "/images/**")
-            .addResourceLocations("/", "/resources/", "classpath:/static/images/");
-}
-```
-
-Controller's method which process a redirect to external site URL
-```html
-@RequestMapping("/redirect")
-public String redirectPage() {
-    return "redirect:https://www.w3.org/";
-}
-```
-
-
-
-In order to implement login/authentication with Spring Security, we need to implement the UserDetailsService interface. 
-The UserDetailsService interface is used to retrieve user-related data. Spring Security provides a UserDetailsService interface to lookup the username, password and GrantedAuthorities for any given user. See
-* [Spring Security: Authentication with a Database-backed UserDetailsService](https://www.baeldung.com/spring-security-authentication-with-a-database)
-* [SPRING BOOT WEB APPLICATION, PART 6 – SPRING SECURITY WITH DAO AUTHENTICATION PROVIDER](https://springframework.guru/spring-boot-web-application-part-6-spring-security-with-dao-authentication-provider/)
+    ```
+    In order to get static resource (image) on HTML page
+    ```
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/resources/**", "/images/**")
+                .addResourceLocations("/", "/resources/", "classpath:/static/images/");
+    }
+    ```
+    Controller's method which process a redirect to external site URL
+    ```html
+    @RequestMapping("/redirect")
+    public String redirectPage() {
+        return "redirect:https://www.w3.org/";
+    }
+    ```
+6. In order to implement login/authentication with Spring Security, we need to implement the UserDetailsService interface. 
+    The UserDetailsService interface is used to retrieve user-related data. Spring Security provides a UserDetailsService interface to lookup the username, password and GrantedAuthorities for any given user. See
+    * [Spring Security: Authentication with a Database-backed UserDetailsService](https://www.baeldung.com/spring-security-authentication-with-a-database)
+    * [SPRING BOOT WEB APPLICATION, PART 6 – SPRING SECURITY WITH DAO AUTHENTICATION PROVIDER](https://springframework.guru/spring-boot-web-application-part-6-spring-security-with-dao-authentication-provider/)
